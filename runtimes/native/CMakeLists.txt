@@ -146,3 +146,21 @@ elseif(EMSCRIPTEN)
 elseif(LIBRETRO_STATIC)
     set_target_properties(wasm4_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.a")
 endif ()
+
+#
+# Bytebox backend (desktop)
+# 
+
+set(BYTEBOX_SOURCES
+    src/backend/main.c
+    src/backend/wasm_bytebox.c
+    src/backend/window_minifb.c
+)
+
+add_executable(wasm4_bytebox ${COMMON_SOURCES} ${BYTEBOX_SOURCES})
+target_include_directories(wasm4_bytebox PRIVATE "${CMAKE_SOURCE_DIR}/vendor/minifb")
+target_include_directories(wasm4_bytebox PRIVATE "${CMAKE_SOURCE_DIR}/vendor/bytebox")
+target_link_directories(wasm4_bytebox PRIVATE "${CMAKE_SOURCE_DIR}/vendor/bytebox")
+target_link_libraries(wasm4_bytebox bytebox minifb cubeb ntdll)
+set_target_properties(wasm4_bytebox PROPERTIES C_STANDARD 99)
+install(TARGETS wasm4_bytebox)
