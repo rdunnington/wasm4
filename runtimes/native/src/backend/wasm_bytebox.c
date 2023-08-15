@@ -174,10 +174,30 @@ static void check (bb_error err) {
     }
 }
 
+enum
+{
+    W4_MEM_MAX_SIZE_BYTES = 64 * 1024,
+};
+
+static void* wasmMemoryResize(void* mem, size_t new_size_bytes, size_t old_size_bytes, void* userdata)
+{
+	if (new_size_bytes > W4_MEM_MAX_SIZE_BYTES)
+	{
+		return NULL;
+	}
+	return wasm_mem;
+}
+
+static void wasmMemoryFree(void* mem, size_t size_bytes, void* userdata)
+{
+	free(wasm_mem);
+}
+
 uint8_t* w4_wasmInit () {
-	const size_t mem_size = 64 * 1024;
-	wasm_mem = malloc(mem_size);
-    memset(wasm_mem, 0, mem_size);
+	wasm_mem = malloc(W4_MEM_MAX_SIZE_BYTES);
+    if (wasm_mem != 0) {
+        memset(wasm_mem, 0, W4_MEM_MAX_SIZE_BYTES);
+    }
 	return wasm_mem;
 }
 
@@ -234,6 +254,12 @@ void w4_wasmLoadModule (const uint8_t* wasmBuffer, int byteLength) {
     bb_import_package_add_function(wasm_package, traceUtf8,		"traceUtf8",	types, 2, types, 0, NULL);
     bb_import_package_add_function(wasm_package, traceUtf16,	"traceUtf16",	types, 2, types, 0, NULL);
     bb_import_package_add_function(wasm_package, tracef,		"tracef",		types, 2, types, 0, NULL);
+
+    bb_wasm_memory_config wasm_mem_config = {
+    	.resize_callback = wasmMemoryResize,
+    	.free_callback = wasmMemoryFree,
+    };
+	bb_import_package_add_memory(wasm_package, &wasm_mem_config, "memory", 1, 1);
 
 	bb_module_instance_instantiate_opts inst_opts = {
 		.packages = &wasm_package,
