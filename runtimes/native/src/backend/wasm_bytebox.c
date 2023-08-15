@@ -20,7 +20,7 @@ typedef char byte_t;
 static void* getMemoryPointer (const bb_val* val) {
     int32_t offset = val->i32_val;
     byte_t* data = (byte_t*)bb_module_instance_mem(module_inst, offset, 1);
-    return (offset < 0 || offset >= (1 << 16)) ? NULL : (void*)(data + offset);
+    return (offset < 0 || offset >= (1 << 16)) ? NULL : (void*)(data);
 }
 
 static void blit (void* userdata, bb_module_instance* module, const bb_val* params, bb_val* returns)
@@ -277,6 +277,9 @@ void w4_wasmLoadModule (const uint8_t* wasmBuffer, int byteLength) {
 	if (bb_module_instance_find_func(module_inst, "_initialize", &func) == BB_ERROR_OK) {
 		check(bb_module_instance_invoke(module_inst, func, NULL, 0, NULL, 0, (bb_module_instance_invoke_opts){0}));
 	}
+
+    bb_module_instance_find_func(module_inst, "start", &start);
+    bb_module_instance_find_func(module_inst, "update", &update);
 }
 
 void w4_wasmCallStart () {
